@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>logistik admin</title>
+    <link rel="stylesheet" href="/style-table.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap" rel="stylesheet">
+
+</head>
+<body>
+    <header>
+        <nav>
+            <h1>logistik</h1>
+            <ul>
+                <li><a href="http://localhost:3000/admin/users">users</a></li>
+                <li><a href="http://localhost:3000/admin/orders">orders</a></li>
+                <li><a href="http://localhost:3000/admin/packaging">packaging</a></li>
+            </ul>
+        </nav>
+    </header>
+    <div class="container1">
+        <div class="container">
+            <h1>user list</h1>
+            <!-- Кнопка для открытия модального окна -->
+            <button id="createUserBtn">Добавить нового пользователя</button>
+            <table>
+                <thead>
+                    <tr>
+                        <th>id</th>
+                        <th>user name</th>
+                        <th>full name</th>
+                        <th>role</th>
+                        <th>phone</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Here will be user data -->
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+
+    <!-- Модальное окно для создания пользователя -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Создать нового пользователя</h2>
+            <form id="createUserForm">
+                <input type="text" id="username" placeholder="Имя пользователя" required>
+                <input type="text" id="fullName" placeholder="ФИО" required>
+                <select id="roleSelect" required>
+                    <option value="">Выберите роль</option>
+                    <option value="1">админ</option>
+                    <option value="2">водитель</option>
+                    <option value="3">пользователь</option>
+                    <!-- Здесь будут варианты выбора роли -->
+                </select>
+                <input type="tel" id="phone" placeholder="Телефон" required>
+                <button type="submit">Создать пользователя</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        // Загрузка данных пользователей
+        axios.get('/api/users')
+            .then(response => {
+                const tbody = document.querySelector('.container table tbody');
+                response.data.forEach(user => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${user.id}</td>
+                        <td>${user.username}</td>
+                        <td>${user.FIO}</td>
+                        <td>${user.role_id}</td>
+                        <td>${user.phone}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            })
+            .catch(error => console.error('Ошибка:', error));
+
+        // Открытие модального окна
+        document.getElementById('createUserBtn').addEventListener('click', () => {
+            document.getElementById('modal').style.display = 'block';
+        });
+
+        // Закрытие модального окна
+        document.addEventListener('DOMContentLoaded', () => {
+    const closeBtn = document.getElementById('close');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            document.getElementById('modal').style.display = 'none';
+        });
+    }
+});
+
+
+        // Очистка экрана при клике вне модального окна
+        window.addEventListener('click', (event) => {
+            if (event.target === event.currentTarget) {
+                document.getElementById('modal').style.display = 'none';
+            }
+        });
+
+        // Обработка формы создания пользователя
+        document.getElementById('createUserForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const userData = {
+                username: document.getElementById('username').value.trim(),
+                FIO: document.getElementById('fullName').value.trim(),
+                role_id: document.getElementById('roleSelect').value,
+                phone: document.getElementById('phone').value.trim()
+            };
+
+            try {
+                await axios.post('/api/users', userData);
+                alert('Пользователь успешно создан!');
+                document.getElementById('createUserForm').reset(); // Сброс формы
+                document.getElementById('modal').style.display = 'none'; // Закрыть модальное окно
+            } catch (error) {
+                console.error('Ошибка при создании пользователя:', error);
+                alert('Произошла ошибка при создании пользователя. Пожалуйста, попробуйте снова.');
+            }
+        });
+
+        // Загрузка данных для выпадающего списка ролей
+        // axios.get('/api/roles')
+        //     .then(response => {
+        //         const roleSelect = document.getElementById('roleSelect');
+        //         response.data.forEach(role => {
+        //             const option = document.createElement('option');
+        //             option.value = role.id;
+        //             option.textContent = role.name;
+        //             roleSelect.appendChild(option);
+        //         });
+        //     })
+        //     .catch(error => console.error('Ошибка при загрузке данных ролей:', error));
+    </script>
+</body>
+</html>

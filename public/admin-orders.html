@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>logistik admin</title>
+    <link rel="stylesheet" href="/style-table.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap" rel="stylesheet">
+
+</head>
+<body>
+    <header>
+        <nav>
+            <h1>logistik</h1>
+            <ul>
+                <li><a href="http://localhost:3000/admin/users">users</a></li>
+                <li><a href="http://localhost:3000/admin/orders">orders</a></li>
+                <li><a href="http://localhost:3000/admin/packaging">packaging</a></li>
+            </ul>
+        </nav>
+    </header>
+    <div class="container1">
+        <div class="container">
+            <h1>order list</h1>
+            <button id="addNewOrderBtn">Добавить новый заказ</button>
+            <table>
+                <thead>
+                    <tr>
+                        <th>order number</th>
+                        <th>order date</th>
+                        <th>total amount</th>
+                        <th>status</th>
+                        <th>delivery address</th>
+                        <th>first address</th>
+                        <th>driver</th>
+                        <th>recipient</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Here will be order data -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Модальное окно для добавления нового заказа -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Добавить новый заказ</h2>
+            <form id="addOrderForm">
+                <input type="tel" id="senderPhone" placeholder="Телефон отправителя" required>
+                <input type="text" id="senderFullName" placeholder="ФИО отправителя" required>
+                <input type="text" id="senderAddress" placeholder="Адрес отправителя" required>
+
+                <input type="tel" id="recipientPhone" placeholder="Телефон получателя" required>
+                <input type="text" id="recipientFullName" placeholder="ФИО получателя" required>
+                <input type="text" id="recipientAddress" placeholder="Адрес получателя" required>
+
+                <select id="cargoType" required>
+                    <option value="">Выберите вид груза</option>
+                    <option value="large">большой</option>
+                    <option value="average">средний</option>
+                    <option value="small">маленький</option>
+                    <!-- Здесь будут варианты выбора вида груза -->
+                </select>
+                <input type="number" id="cargoWeight" step="0.01" min="0" placeholder="Вес груза" required>
+                <input type="number" id="cargoVolume" step="0.01" min="0" placeholder="Объем груза" required>
+
+                <select id="packagingType" required>
+                    <option value="">Выберите тип упаковки</option>
+                    <option value="2">коробка</option>
+                    <option value="3">бумага</option>
+
+                    <!-- Здесь будут варианты выбора типа упаковки -->
+                </select>
+
+                <button type="submit">Добавить заказ</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        axios.get('/api/orders')
+            .then(response => {
+                const tbody = document.querySelector('.container table tbody');
+                response.data.forEach(order => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${order.order_number}</td>
+                        <td>${new Date(order.order_date).toLocaleDateString()}</td>
+                        <td>${order.total_amount.toFixed(2)}</td>
+                        <td>${order.status}</td>
+                        <td>${order.delivery_address}</td>
+                        <td>${order.first_address}</td>
+                        <td>${order.Driver_id ? order.Driver_id.username : ''}</td>
+                        <td>${order.Recipient_id ? order.Recipient_id.FIO : ''}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            })
+            .catch(error => console.error('Ошибка:', error));
+
+            document.getElementById('addNewOrderBtn').addEventListener('click', () => {
+            document.getElementById('modal').style.display = 'block';
+        });
+
+        document.getElementById('close')?.addEventListener('click', () => {
+            document.getElementById('modal').style.display = 'none';
+        });
+
+        window.addEventListener('click', (event) => {
+            if (event.target === event.currentTarget) {
+                document.getElementById('modal').style.display = 'none';
+            }
+        });
+
+        document.getElementById('addOrderForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const orderData = {
+                senderPhone: document.getElementById('senderPhone').value.trim(),
+                senderFullName: document.getElementById('senderFullName').value.trim(),
+                senderAddress: document.getElementById('senderAddress').value.trim(),
+                recipientPhone: document.getElementById('recipientPhone').value.trim(),
+                recipientFullName: document.getElementById('recipientFullName').value.trim(),
+                recipientAddress: document.getElementById('recipientAddress').value.trim(),
+                cargoType: document.getElementById('cargoType').value,
+                cargoWeight: parseFloat(document.getElementById('cargoWeight').value),
+                cargoVolume: parseFloat(document.getElementById('cargoVolume').value),
+                packagingType: document.getElementById('packagingType').value
+            };
+
+            try {
+                await axios.post('/create-order', orderData);
+                document.getElementById('modal').style.display = 'none';
+                location.reload(); // Перезагрузка страницы для отображения нового заказа
+            } catch (error) {
+                console.error('Ошибка при добавлении заказа:', error);
+            }
+        });
+
+        // Дополнительный код для заполнения выпадающих списков
+        // axios.get('/api/cargo-types')
+        //     .then(response => {
+        //         const cargoTypeSelect = document.getElementById('cargoType');
+        //         response.data.forEach(type => {
+        //             const option = document.createElement('option');
+        //             option.value = type.id;
+        //             option.textContent = type.name;
+        //             cargoTypeSelect.appendChild(option);
+        //         });
+        //     });
+
+        // axios.get('/api/packaging-types')
+        //     .then(response => {
+        //         const packagingTypeSelect = document.getElementById('packagingType');
+        //         response.data.forEach(type => {
+        //             const option = document.createElement('option');
+        //             option.value = type.id;
+        //             option.textContent = type.name;
+        //             packagingTypeSelect.appendChild(option);
+        //         });
+        //     });
+    </script>
+</body>
+</html>

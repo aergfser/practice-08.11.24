@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>logistik admin</title>
+    <link rel="stylesheet" href="/style-table.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap" rel="stylesheet">
+
+</head>
+<body>
+    <header>
+        <nav>
+            <h1>logistik</h1>
+            <ul>
+                <li><a href="http://localhost:3000/admin/users">users</a></li>
+                <li><a href="http://localhost:3000/admin/orders">orders</a></li>
+                <li><a href="http://localhost:3000/admin/packaging">packaging</a></li>
+            </ul>
+        </nav>
+    </header>
+    <div class="container1">
+        <div class="container">
+            <h1>packaging list</h1>
+            <button id="addNewRecordBtn">Add New Record</button>
+            <table>
+                <thead>
+                    <tr>
+                        <th>type</th>
+                        <th>cost</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Here will be user data -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Add New Packaging</h2>
+            <form id="addPackingForm">
+                <input type="text" id="packagingType" placeholder="Packaging Type" required>
+                <input type="number" id="cost" step="0.01" min="0" placeholder="Cost" required>
+                <button type="submit">Add Record</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        axios.get('/api/packaging')
+            .then(response => {
+                const tbody = document.querySelector('.container table tbody');
+                response.data.forEach(packaging => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${packaging.packaging_type}</td>
+                        <td>${packaging.cost.toFixed(2)}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            })
+            .catch(error => console.error('Error:', error));
+    
+    
+        document.getElementById('addNewRecordBtn').addEventListener('click', () => {
+            document.getElementById('modal').style.display = 'block';
+        });
+
+        document.getElementById('close')?.addEventListener('click', () => {
+            document.getElementById('modal').style.display = 'none';
+        });
+
+        window.addEventListener('click', (event) => {
+            if (event.target === event.currentTarget) {
+                document.getElementById('modal').style.display = 'none';
+            }
+        });
+
+        document.getElementById('addPackingForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const packagingType = document.getElementById('packagingType').value.trim();
+            const cost = parseFloat(document.getElementById('cost').value);
+
+            try {
+                await axios.post('/api/packaging', { 
+                    packaging_type: packagingType,
+                    cost: cost
+                });
+                document.getElementById('modal').style.display = 'none';
+                location.reload(); // Reload the page to show the newly added record
+            } catch (error) {
+                console.error('Error adding new record:', error);
+            }
+        });
+    </script>
+</body>
+</html>
